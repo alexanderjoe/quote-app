@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Quote extends Model
 {
@@ -12,7 +13,12 @@ class Quote extends Model
     protected $fillable = [
         'quote',
         'author',
-        'image_url',
+        'image',
         'gpt',
     ];
+
+    public function getUrl()
+    {
+        return Storage::url($this->image);
+    }
 }

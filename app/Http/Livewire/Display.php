@@ -7,12 +7,17 @@ use Livewire\Component;
 
 class Display extends Component
 {
+    protected $listeners = ['refreshQuotes' => '$refresh'];
+
     public function render()
     {
-        $quotes = Quote::latest()->get();
-
         return view('livewire.display', [
-            'quotes' => $quotes,
+            'quotes' => $this->getQuotes(),
         ]);
+    }
+
+    public function getQuotes()
+    {
+        return Quote::latest()->get();
     }
 }

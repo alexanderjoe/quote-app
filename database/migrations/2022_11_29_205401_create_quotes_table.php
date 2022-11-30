@@ -15,10 +15,10 @@ return new class extends Migration
     {
         Schema::create('quotes', function (Blueprint $table) {
             $table->id();
-            $table->string('quote');
+            $table->text('quote');
             $table->string('author')->nullable();
-            $table->longText('image_url')->nullable();
-            $table->string('gpt')->nullable();
+            $table->text('image')->nullable();
+            $table->text('gpt')->nullable();
             $table->timestamps();
         });
     }

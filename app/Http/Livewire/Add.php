@@ -3,15 +3,17 @@
 namespace App\Http\Livewire;
 
 use App\Models\Quote;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 
 class Add extends Component
 {
-    public $quote = '';
+    public string $quote = '';
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.add');
     }
@@ -36,20 +38,27 @@ class Add extends Component
             'prompt' => $this->quote,
             'size' => '512x512',
             'n' => 1,
-            'response_format' => 'url',
+            'response_format' => 'b64_json',
         ])->json();
 
         Log::debug('Fetching image from OpenAI', $image);
-        Log::debug($image['data'][0]['url']);
+        Log::debug($image['data'][0]['b64_json']);
 
-        if(!is_null($request['choices'][0]['text'])) {
+        $image_path = 'public/images/' . $image['created'] . '.png';
+
+        Storage::put($image_path, base64_decode($image['data'][0]['b64_json']));
+
+        if (!is_null($request['choices'][0]['text'])) {
             Quote::create([
                 'quote' => $this->quote,
                 'gpt' => trim($request['choices'][0]['text']),
-                'image_url' => $image['data'][0]['url'],
+                'image' => $image_path,
             ]);
         }
 
         $this->quote = '';
+
+        // emit the event to refresh the display component
+        $this->emit('refreshQuotes');
     }
 }

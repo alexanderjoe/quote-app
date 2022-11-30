@@ -7,6 +7,6 @@
     </section>
     <section class="mt-3">
         <h3 class="text-2xl mb-2">OpenAI DALL&middot;E&nbsp;2 Quote Representation:</h3>
-        <img src="{{ $quote->image_url }}">
+        <img src="{{ $quote->getUrl() }}">
     </section>
 </div>
