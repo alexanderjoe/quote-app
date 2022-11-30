@@ -17,9 +17,11 @@
         </div>
     </nav>
     <div class="container mx-auto mt-4">
-        <livewire:add />
-
-        <livewire:display />
+        <div class="mx-4">
+            <livewire:add />
+    
+            <livewire:display />
+        </div>
     </div>
 </div>
 @vite('resources/js/app.js')
