@@ -7,4 +7,6 @@
             <h2 class="text-2xl mb-1">No quotes yet!</h2>
         </div>
     @endforelse
+
+    {{ $quotes->links() }}
 </div>

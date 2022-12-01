@@ -18,6 +18,6 @@ class Display extends Component
 
     public function getQuotes()
     {
-        return Quote::latest()->get();
+        return Quote::latest()->paginate(10);
     }
 }
