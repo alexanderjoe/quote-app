@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use OpenAI;
 
 class Add extends Component
 {
@@ -19,42 +20,46 @@ class Add extends Component
         return view('livewire.add');
     }
 
-    public function addQuote()
+    public function addQuote(): void
     {
         $this->validate([
             'quote' => 'required|min:3',
             'author' => 'sometimes',
         ]);
 
+        $client = OpenAI::client(config('app.api_key'));
+
         try {
-            $request = Http::withToken(config('app.api_key'))->post('https://api.openai.com/v1/completions', [
-                'model' => 'text-davinci-002',
-                'prompt' => "Describe this quote as an image, \"{$this->quote}\"",
+            Log::debug('Fetching text generation from OpenAI');
+
+            $text_resp = $client->completions()->create([
+                'model' => 'gpt-3.5-turbo-instruct',
+                'prompt' => "Describe this quote as if it were an image, \"{$this->quote}\". Do not repeat the quote in your description.",
                 'max_tokens' => 256,
                 'temperature' => 0.7,
-            ])->json();
+            ]);
+            $text_result = trim($text_resp['choices'][0]['text']);
+            Log::debug("Text fetched from OpenAI {$text_resp->created}");
 
-            Log::debug('Fetching text generation from OpenAI', $request);
-            Log::debug($request['choices'][0]['text']);
 
-            $image = Http::withToken(config('app.api_key'))->post('https://api.openai.com/v1/images/generations', [
-                'prompt' => $this->quote,
-                'size' => '512x512',
+            Log::debug('Fetching image from OpenAI...');
+            $image_resp = $client->images()->create([
+                'model' => 'dall-e-3',
+                'prompt' => $text_result,
+                'size' => '1024x1024',
                 'n' => 1,
                 'response_format' => 'b64_json',
-            ])->json();
+            ]);
+            Log::debug("Image fetched from OpenAI {$image_resp->created}");
 
-            Log::debug('Fetching image from OpenAI', $image);
-            Log::debug($image['data'][0]['b64_json']);
+            $image_path = 'public/images/'.$image_resp->created.'.png';
 
-            $image_path = 'public/images/' . $image['created'] . '.png';
+            Storage::put($image_path, base64_decode($image_resp['data'][0]['b64_json']));
 
-            Storage::put($image_path, base64_decode($image['data'][0]['b64_json']));
-
-            if (!is_null($request['choices'][0]['text'])) {
+            if (!is_null($text_resp['choices'][0]['text'])) {
                 Quote::create([
                     'quote' => $this->quote,
-                    'gpt' => trim($request['choices'][0]['text']),
+                    'gpt' => trim($text_resp['choices'][0]['text']),
                     'image' => $image_path,
                     'author' => $this->author,
                 ]);
