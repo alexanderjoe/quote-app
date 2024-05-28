@@ -3,7 +3,7 @@
     <hr>
     <div class="grid grid-cols-1 lg:grid-cols-2">
         <section class="mt-3">
-            <h3 class="text-2xl">OpenAI GPT-3.5 Quote Representation:</h3>
+            <h3 class="text-2xl">OpenAI GPT-4o Quote Representation:</h3>
             <p class="text-xl">{{ $quote->gpt }}</p>
         </section>
         <section class="mt-3">

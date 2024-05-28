@@ -32,14 +32,27 @@ class Add extends Component
         try {
             Log::debug('Fetching text generation from OpenAI');
 
-            $text_resp = $client->completions()->create([
-                'model' => 'gpt-3.5-turbo-instruct',
-                'prompt' => "Describe this quote as if it were an image, \"{$this->quote}\". Do not repeat the quote in your description.",
-                'max_tokens' => 256,
-                'temperature' => 0.7,
+            $text_resp = $client->chat()->create([
+                'model' => 'gpt-4o',
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => "Describe the following quote as if it were an image, this output will be used to generate an image representation of the quote. Do not repeat the quote in your description. Keep the message relatively short. Quote: \"{$this->quote}\""
+                    ],
+                ],
             ]);
-            $text_result = trim($text_resp['choices'][0]['text']);
+            $text_result = trim($text_resp['choices'][0]['message']['content']);
+//            dd($text_result);
             Log::debug("Text fetched from OpenAI {$text_resp->created}");
+
+//            $text_resp = $client->completions()->create([
+//                'model' => 'gpt-3.5-turbo-instruct',
+//                'prompt' => "Describe the following quote as if it were an image, this output will be used to generate an image representation of the quote. Do not repeat the quote in your description. Quote: \"{$this->quote}\"",
+//                'max_tokens' => 256,
+//                'temperature' => 0.7,
+//            ]);
+//            $text_result = trim($text_resp['choices'][0]['text']);
+//            Log::debug("Text fetched from OpenAI {$text_resp->created}");
 
 
             Log::debug('Fetching image from OpenAI...');
@@ -56,10 +69,10 @@ class Add extends Component
 
             Storage::put($image_path, base64_decode($image_resp['data'][0]['b64_json']));
 
-            if (!is_null($text_resp['choices'][0]['text'])) {
+            if (!empty($text_result) && !empty($image_path)) {
                 Quote::create([
                     'quote' => $this->quote,
-                    'gpt' => trim($text_resp['choices'][0]['text']),
+                    'gpt' => $text_result,
                     'image' => $image_path,
                     'author' => $this->author,
                 ]);
